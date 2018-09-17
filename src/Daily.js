@@ -5,63 +5,7 @@ import SERVER_URL from './constants/server';
 
 import Row from './Row';
 
-const sampleDailyTasks = [
-  {
-    name: 'Do Dishes',
-    completed: {
-      sun: true,
-      mon: true,
-      tue: false,
-      wed: true,
-      thurs: false,
-      fri: true,
-      sat: false,
-    },
-    color: '#bada55',
-    // TODO: add userId (from token)
-    // dbID: don't care
-
-  },
-  {
-    name: 'Walk Dog',
-    completed: {
-      sun: true,
-      mon: false,
-      tue: false,
-      wed: true,
-      thurs: true,
-      fri: true,
-      sat: false,
-    },
-    color: '#123abc',
-  },
-  {
-    name: 'Make bed',
-    completed: {
-      sun: false,
-      mon: true,
-      tue: false,
-      wed: true,
-      thurs: true,
-      fri: true,
-      sat: false,
-    },
-    color: '#f1c3bd',
-  },
-  {
-    name: 'Clean litterbox',
-    completed: {
-      sun: true,
-      mon: true,
-      tue: true,
-      wed: true,
-      thurs: true,
-      fri: true,
-      sat: true,
-    },
-    color: '#d4f2ec',
-  },
-]
+const sampleDailyTasks = []
 
 export default class Daily extends Component {
   constructor(props) {
@@ -83,18 +27,19 @@ export default class Daily extends Component {
     })
   }
 
-  handleClick = e => { 
-    console.log('clicked');
+  handleClick = e => {
     const idx = parseInt(e.target.parentElement.dataset.idx, 10);
     const day = e.target.dataset.day
     const currentTasks = this.state.dailyTasks;
     currentTasks[idx].completed[day] = !this.state.dailyTasks[idx].completed[day];
     this.setState({
       dailyTasks: currentTasks,
-    });
-    axios.post(SERVER_URL + `/daily/${this.state.dailyTasks[idx].id}`, { data: this.state.dailyTasks[idx] })
-      .then(response => {console.log(response)})
+    }, () => {
+      axios.post(SERVER_URL + `/daily/${this.state.dailyTasks[idx]._id}`, { data: this.state.dailyTasks[idx] })
+      .then(response => {console.log('success', response)})
       .catch(err => { console.log('ERROR', err);})
+    });
+
   }
 
   handleNewTask = e => {
@@ -115,16 +60,17 @@ export default class Daily extends Component {
       },
       color: newColor,
     }
-    currentTasks.push(newTask);
-    this.setState({
-      dailyTasks: currentTasks,
-      newName: '',
-      newColor: '#bada55',
-      addNewShowing: false,
-    });
-    const stringedTask = JSON.stringify(newTask);
-    axios.post(SERVER_URL + '/daily', { data: stringedTask })
-      .then(response => {console.log(response)})
+
+    axios.post(SERVER_URL + '/daily', { data: newTask })
+      .then(response => {
+        currentTasks.push(response.data);
+        this.setState({
+          dailyTasks: currentTasks,
+          newName: '',
+          newColor: '#bada55',
+          addNewShowing: false
+        })
+      })
       .catch(err => { console.log('ERROR', err);})
   }
 
@@ -161,7 +107,7 @@ export default class Daily extends Component {
             <div className="input-field">
               <SliderPicker color={this.state.newColor} onChangeComplete={ this.handleChangeComplete } />
             </div>
-            <a class="waves-effect waves-light btn" onClick={this.handleNewTask}>Add Task</a>
+            <a className="waves-effect waves-light btn" onClick={this.handleNewTask}>Add Task</a>
           </div>
         </main>
       );
